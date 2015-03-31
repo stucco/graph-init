@@ -13,6 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.configuration.Configuration;
 
 import gov.ornl.stucco.DBClient.DBConnection;
 import gov.pnnl.stucco.utilities.CommandLine;
@@ -684,6 +685,7 @@ public class SchemaToGremlin {
         try {
             CommandLine parser = new CommandLine();
             parser.add0("-test");
+            parser.add1("-schema");
             parser.parse(args);
             boolean useTestConfig = parser.found("-test");
             
@@ -692,11 +694,28 @@ public class SchemaToGremlin {
                 loader.setTestMode(true);
             }
             
-            File dir = new File("../ontology");
-            loader.parse(new File(dir, "stucco_schema.json"));
+            String schemaFile = "stucco_schema.json";
+            File dir = null;
+            if (parser.found("-schema")) {
+                String schemaPath = parser.getValue();
+                dir = new File(schemaPath);
+            }
+            else {
+                // assume the default location
+                System.err.println("Using default directory");
+                dir = new File(".");
+            }
+            
+            // load the schema and create the indexes
+            loader.parse(new File(dir, schemaFile));
         } 
+        catch (IOException e) {
+            System.err.printf("Error in opening file, path or file does not exist: %s\n", e.toString());
+            System.exit(-1);
+        }
         catch (UsageException e) {
-            System.err.println("SchemaToGremlin [-test]");
+            System.err.println("SchemaToGremlin [-test] <-schema directory>");
+            System.exit(-1);
         }
     }
 }
