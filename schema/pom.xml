@@ -4,7 +4,7 @@
 	<groupId>schema</groupId>
 	<artifactId>schema</artifactId>
 	<version>2.0.1</version>
-	<packaging>jar</packaging>
+	<!-- <packaging>jar</packaging> -->
 
 	<name>schema</name>
 	<url>http://maven.apache.org</url>
@@ -65,9 +65,14 @@
 			<artifactId>snakeyaml</artifactId>
 			<version>1.14</version>
 		</dependency>
+		<dependency>
+	      <groupId>DBClient</groupId>
+	      <artifactId>DBClient</artifactId>
+	      <version>2.0.1</version>
+    	</dependency>
 	</dependencies>
 	<build>
-		<plugins>
+		<plugins>  
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
@@ -77,6 +82,31 @@
 					<compilerArgument></compilerArgument>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.dstovall</groupId>
+				<artifactId>onejar-maven-plugin</artifactId>
+				<version>1.4.4</version>
+				<executions>
+					<execution>
+						<id>build-first</id>
+						<configuration>
+							<mainClass>gov.pnnl.stucco.schema.SchemaToGremlin</mainClass>
+							<attachToBuild>true</attachToBuild>
+							<classifier>onejar</classifier>
+							<filename>populate_schema.jar</filename>
+						</configuration>
+						<goals>
+							<goal>one-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>onejar-maven-plugin.googlecode.com</id>
+			<url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
+		</pluginRepository>
+	</pluginRepositories>
 </project>
