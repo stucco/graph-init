@@ -15,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gov.ornl.stucco.DBClient.DBConnection;
+import gov.pnnl.stucco.utilities.CommandLine;
+import gov.pnnl.stucco.utilities.CommandLine.UsageException;
 
 import com.tinkerpop.rexster.client.RexsterClient;
 
@@ -77,6 +79,12 @@ public class SchemaToGremlin {
     /** Our gateway to Rexster. */
     private DBConnection dbConnection;
     
+    /** 
+     * If true, use the test config for the DBConnection; otherwise
+     * use the default config.
+     */
+    private boolean testMode;
+    
     /** Counter used to generate unique index names. */
     private int indexNumber = 0;
 
@@ -102,6 +110,10 @@ public class SchemaToGremlin {
 
     
     public SchemaToGremlin() {
+    }
+    
+    public void setTestMode(boolean flag) {
+        testMode = flag;
     }
     
     /** 
@@ -645,7 +657,8 @@ public class SchemaToGremlin {
     public DBConnection openRexsterConnection() {
         DBConnection c = null;
         try {
-            RexsterClient client = DBConnection.createClient(DBConnection.getTestConfig(), WAIT_TIME);
+            Configuration config = testMode?  DBConnection.getTestConfig() : DBConnection.getDefaultConfig();
+            RexsterClient client = DBConnection.createClient(config, WAIT_TIME);
             c = new DBConnection( client );
         }
         catch (Exception e){
@@ -668,9 +681,23 @@ public class SchemaToGremlin {
     }
 
     public static void main(String... args) throws IOException {
-        SchemaToGremlin loader = new SchemaToGremlin();
-        File dir = new File("../ontology");
-        loader.parse(new File(dir, "stucco_schema.json"));
+        try {
+            CommandLine parser = new CommandLine();
+            parser.add0("-test");
+            parser.parse(args);
+            boolean useTestConfig = parser.found("-test");
+            
+            SchemaToGremlin loader = new SchemaToGremlin();
+            if (useTestConfig) {
+                loader.setTestMode(true);
+            }
+            
+            File dir = new File("../ontology");
+            loader.parse(new File(dir, "stucco_schema.json"));
+        } 
+        catch (UsageException e) {
+            System.err.println("SchemaToGremlin [-test]");
+        }
     }
 }
 
