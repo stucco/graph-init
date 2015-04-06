@@ -8,7 +8,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.test.skip>true</maven.test.skip>
   </properties>
-  </dependencies>
+  <dependencies>
     <dependency>
       <groupId>gov.ornl.stucco</groupId>
       <artifactId>DBClient</artifactId>
