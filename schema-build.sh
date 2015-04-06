@@ -6,9 +6,9 @@ git clone -b master https://github.com/stucco/ontology.git
 cp ontology/stucco_schema.json .
 
 echo "Building graph-init..."
-mvn -X -e clean install -Dmaven.test.skip=true
+mvn clean install -Dmaven.test.skip=true
 cd schema
-mvn -X -e clean package -Dmaven.test.skip=true
+mvn clean package -Dmaven.test.skip=true
 cd ..
 
 echo "Cleaning up...."

@@ -66,7 +66,7 @@
 			<version>1.14</version>
 		</dependency>
 		<dependency>
-	      <groupId>DBClient</groupId>
+	      <groupId>gov.ornl.stucco</groupId>
 	      <artifactId>DBClient</artifactId>
 	      <version>2.0.1</version>
     	</dependency>
@@ -75,7 +75,7 @@
 		<plugins>  
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
+				<version>3.1</version>
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>
