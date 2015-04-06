@@ -66,7 +66,7 @@
 			<version>1.14</version>
 		</dependency>
 		<dependency>
-	      <groupId>DBClient</groupId>
+	      <groupId>gov.ornl.stucco</groupId>
 	      <artifactId>DBClient</artifactId>
 	      <version>2.0.1</version>
     	</dependency>
