@@ -19,6 +19,7 @@ import gov.ornl.stucco.DBClient.DBConnection;
 import gov.pnnl.stucco.utilities.CommandLine;
 import gov.pnnl.stucco.utilities.CommandLine.UsageException;
 
+import com.tinkerpop.rexster.client.RexProException;
 import com.tinkerpop.rexster.client.RexsterClient;
 
 
@@ -673,7 +674,12 @@ public class SchemaToGremlin {
     /** Sends a request to Rexster. */
     private void executeRexsterRequest(String request) {
         logger.info("Making Rexster request: " + request);
-        dbConnection.execute(request);
+        try {
+            dbConnection.execute(request);
+        } catch (RexProException | IOException e) {
+            // TODO Auto-generated catch block
+            logger.error("Rexster request error: " + e.toString());
+        }
     }
     
     private void closeRexsterConnection() {
