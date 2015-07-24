@@ -3,6 +3,7 @@
 	<name>schema</name>
 	<comment></comment>
 	<projects>
+		<project>DBClient</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

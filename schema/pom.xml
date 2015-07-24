@@ -99,6 +99,18 @@
 							<goal>one-jar</goal>
 						</goals>
 					</execution>
+					<execution>
+						<id>build-second</id>
+						<configuration>
+							<mainClass>gov.pnnl.stucco.schema.IndexDefinitionsToGremlin</mainClass>
+							<attachToBuild>true</attachToBuild>
+							<classifier>onejar</classifier>
+							<filename>populate_specification.jar</filename>
+						</configuration>
+						<goals>
+							<goal>one-jar</goal>
+						</goals>
+					</execution>
 				</executions>
 			</plugin>
 		</plugins>

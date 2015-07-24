@@ -93,7 +93,7 @@
             <graph-read-only>false</graph-read-only>
             <properties>
                 <storage.backend>inmemory</storage.backend>
-                <schema.default>none</schema.default>
+                <!-- <schema.default>none</schema.default> -->
                 <index.search.backend>elasticsearch</index.search.backend>
                 <!--index.search.hostname>localhost</index.search.hostname-->
                 <index.search.directory>db/es</index.search.directory>

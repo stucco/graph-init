@@ -1,4 +1,4 @@
 #!/bin/sh
 
-echo "executing schema load and indexing..."
-java -jar schema/target/populate_schema.jar $1
+echo "executing specification load and indexing..."
+java -jar schema/target/populate_specification.jar $1
