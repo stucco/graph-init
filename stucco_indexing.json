@@ -113,16 +113,6 @@
       "type": "mixed",
       "keys": [
         {
-          "name": "comments",
-          "class": "String",
-          "cardinality": "SET"
-        }
-      ]    
-    },
-    {
-      "type": "mixed",
-      "keys": [
-        {
           "name": "description",
           "class": "String"
         }
