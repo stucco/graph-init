@@ -1,7 +1,7 @@
 {
   "indexes": [
     {
-      "type": "composite",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "name",
@@ -10,7 +10,7 @@
       ]    
     },
     {
-      "type": "composite",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "vertexType",
@@ -19,17 +19,7 @@
       ]    
     },
     {
-      "type": "composite",
-      "keys": [
-        {
-          "name": "source",
-          "class": "String",
-          "cardinality": "SET"
-        }
-      ]    
-    },
-    {
-      "type": "composite",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "nvdId",
@@ -38,7 +28,7 @@
       ]    
     },
     {
-      "type": "composite",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "countryCode",
@@ -47,7 +37,7 @@
       ]    
     },
     {
-      "type": "composite",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "countryName",
@@ -56,7 +46,7 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "phaseDate",
@@ -65,7 +55,7 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "modifiedDate",
@@ -74,7 +64,7 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "publishedDate",
@@ -83,7 +73,7 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "discoveryDate",
@@ -92,7 +82,7 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "signatureDate",
@@ -101,7 +91,7 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "startTime",
@@ -110,7 +100,7 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "FULLTEXT ENGINE LUCENE",
       "keys": [
         {
           "name": "description",
@@ -119,7 +109,7 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "FULLTEXT",
       "keys": [
         {
           "name": "shortDescription",
@@ -128,7 +118,7 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "FULLTEXT",
       "keys": [
         {
           "name": "solution",
@@ -137,16 +127,16 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "ipInt",
-          "class": "Integer"
+          "class": "Long"
         }
       ]    
     },
     {
-      "type": "mixed",
+      "type": "FULLTEXT",
       "keys": [
         {
           "name": "startIP",
@@ -155,16 +145,16 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "startIPInt",
-          "class": "Integer"
+          "class": "Long"
         }
       ]    
     },
     {
-      "type": "mixed",
+      "type": "FULLTEXT",
       "keys": [
         {
           "name": "endIP",
@@ -173,16 +163,16 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "NOTUNIQUE",
       "keys": [
         {
           "name": "endIPInt",
-          "class": "Integer"
+          "class": "Long"
         }
       ]    
     },
     {
-      "type": "mixed",
+      "type": "FULLTEXT",
       "keys": [
         {
           "name": "details",
@@ -191,7 +181,7 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "FULLTEXT",
       "keys": [
         {
           "name": "removal",
@@ -200,7 +190,7 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "FULLTEXT",
       "keys": [
         {
           "name": "behavior",
@@ -209,7 +199,7 @@
       ]    
     },
     {
-      "type": "mixed",
+      "type": "FULLTEXT",
       "keys": [
         {
           "name": "overview",

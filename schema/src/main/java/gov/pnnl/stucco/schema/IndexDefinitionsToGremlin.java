@@ -17,6 +17,9 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.orientechnologies.orient.core.exception.OCommandExecutionException;
+import com.tinkerpop.blueprints.impls.orient.OrientDynaElementIterable;
+import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.rexster.client.RexProException;
 import com.tinkerpop.rexster.client.RexsterClient;
 
@@ -30,7 +33,7 @@ import com.tinkerpop.rexster.client.RexsterClient;
  * 
  * "indexes": [ 
  *   {
- *     type: ("composite"|"mixed")
+ *     type: ("NOTUNIQUE"|"FULLTEXT")
  *     keys: [
  *       {
  *         "name": propertyName
@@ -58,13 +61,13 @@ public class IndexDefinitionsToGremlin {
     
     // Other String constants
     private static final String STRING = "String";
-    private static final String COMPOSITE = "composite";
-    private static final String MIXED = "mixed";
+    private static final String NOTUNIQUE = "NOTUNIQUE";
+    private static final String FULLTEXT = "FULLTEXT";
 
     /** Number of seconds to pause after initiating connection. */
     private static final int WAIT_TIME = 1;
     
-    /** Our gateway to Rexster. */
+    /** Our gateway to the DB. */
     private DBConnection dbConnection;
     
     /** 
@@ -115,30 +118,19 @@ public class IndexDefinitionsToGremlin {
 
     /**
      * Parses a single index specification, declaring it, and any properties it
-     * uses, to Gremlin. 
+     * uses, to DB. 
      */
     private void parseIndexSpec(JSONObject indexSpec) {
         StringBuilder request = new StringBuilder();
-        request.append("m = g.getManagementSystem();");
         
         String type = indexSpec.getString(TYPE);
         JSONArray keys = indexSpec.getJSONArray(KEYS);
         
         List<String> propertyNames = new ArrayList<String>();
-        String propertyDeclarations = buildPropertyDeclarations(keys, propertyNames);       
+        String propertyDeclarations = buildPropertyDeclarations(keys, propertyNames);
         request.append(propertyDeclarations);
         
-        String indexDeclaration = buildIndexDeclaration(type, propertyNames);
-        if (indexDeclaration.isEmpty()) {
-            // Couldn't create it
-            logger.error(String.format("Couldn't create index (type = %s)", type));
-            return;
-        }
-        
-        request.append(indexDeclaration);
-        
-        request.append("m.commit();");
-        executeRexsterRequest(request.toString());
+        buildIndexDeclaration(type, propertyNames);
     }
 
     /**
@@ -175,6 +167,7 @@ public class IndexDefinitionsToGremlin {
 
             // Make the property declaration for the key
             String declaration = buildPropertyDeclaration(property, classType, cardinality);
+            this.dbConnection.<OrientDynaElementIterable>executeSQL(declaration);
             declarations.append(declaration);
         }
         
@@ -195,47 +188,21 @@ public class IndexDefinitionsToGremlin {
         cardinality = cardinality.trim().toUpperCase();
 
         // Build the declaration
-        StringBuilder declaration = new StringBuilder();
-        declaration.append(String.format("m.makePropertyKey('%s')", propertyName));
-        declaration.append(String.format(".dataType(%s.class)", classType));
-        if (!cardinality.isEmpty()) {
-            declaration.append(String.format(".cardinality(Cardinality.%s)", cardinality));
-        }
-        declaration.append(".make();");
+        String declaration = String.format("CREATE PROPERTY V.%s %s", propertyName, classType);
 
-        return declaration.toString();
+        return declaration;
     }
     
-    /** Builds a Gremlin index declaration. */
-    private String buildIndexDeclaration(String indexType, List<String> propertyKeys) {
-        StringBuilder declaration = new StringBuilder();
+    /** Builds a DB index declaration. */
+    private void buildIndexDeclaration(String indexType, List<String> propertyKeys) {
         
-        // Make up a name
-        String indexName = generateIndexName();
-        declaration.append(String.format("m.buildIndex('%s', Vertex.class)", indexName));
- 
-        
-        String keysDeclaration = buildAddKeysDeclaration(propertyKeys);
-        if (keysDeclaration.isEmpty()) {
-            // Couldn't because one or more keys was already used
-            return "";
+        for(String key : propertyKeys) {
+            // Make up a name
+            String indexName = generateIndexName();        
+            String declaration = String.format("CREATE INDEX %s ON V (%s) %s", indexName, key, indexType);
+            this.dbConnection.<Integer>executeSQL(declaration);
         }
         
-        declaration.append(keysDeclaration);
-        
-        if (indexType.equalsIgnoreCase(COMPOSITE)) {
-            declaration.append(".buildCompositeIndex();");
-        }
-        else if (indexType.equalsIgnoreCase(MIXED)) {
-            declaration.append(".buildMixedIndex('search');");
-        }
-        else {
-            // Not a recognized type
-            logger.error("Unrecognized index type: " + indexType);
-            return "";
-        }
-        
-        return declaration.toString();
     }
     
     /** 
@@ -273,8 +240,8 @@ public class IndexDefinitionsToGremlin {
         DBConnection c = null;
         try {
             Configuration config = testMode?  DBConnection.getTestConfig() : DBConnection.getDefaultConfig();
-            RexsterClient client = DBConnection.createClient(config, WAIT_TIME);
-            c = new DBConnection( client );
+            OrientGraph graph = DBConnection.getOrientGraph(config);
+            c = new DBConnection( graph );
         }
         catch (Exception e){
             // don't really care
@@ -285,24 +252,24 @@ public class IndexDefinitionsToGremlin {
     }
 
     private void closeRexsterConnection() {
-        RexsterClient client = dbConnection.getClient();
-        DBConnection.closeClient(client);        
+        OrientGraph client = dbConnection.getGraph();
+        DBConnection.closeGraph(client);        
     }
 
-    /** Sends a request to Rexster. */
+    /** Sends a request to DB. */
     private void executeRexsterRequest(String request) {
-        logger.info("Making Rexster request: " + request);
+        logger.info("Making DB request: " + request);
         for (int attempt = 1; attempt <= 3; attempt++) {
             try {
-                dbConnection.execute(request);
-                logger.info("    Rexster request succeeded");
+                dbConnection.executeSQL(request);
+                logger.info("    DB request succeeded");
                 return;
             } 
-            catch (RexProException | IOException e) {
-                logger.error("    Rexster request failed: " + e); 
+            catch (OCommandExecutionException e) {
+                logger.error("    DB request failed: " + e); 
             }
         }
-        logger.error("    Skipping Rexster request after 3 failed attempts.");
+        logger.error("    Skipping DB request after 3 failed attempts.");
     }
     
     /** Gets a text file's content as a String. */
