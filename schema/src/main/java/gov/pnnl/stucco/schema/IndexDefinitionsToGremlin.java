@@ -94,7 +94,7 @@ public class IndexDefinitionsToGremlin {
      * properties used in the indexes.
      */
     private void parse(File file) throws IOException {
-        dbConnection = openRexsterConnection();
+        dbConnection = openDBConnection();
         
         // Load the schema file into a JSONObject
         String str = getTextFileContent(file);
@@ -235,8 +235,8 @@ public class IndexDefinitionsToGremlin {
         return capitalized;
     }
 
-    /** Connects to Titan via the Rexster client interface. */
-    public DBConnection openRexsterConnection() {
+    /** Connects to Orient database. */
+    public DBConnection openDBConnection() {
         DBConnection c = null;
         try {
             Configuration config = testMode?  DBConnection.getTestConfig() : DBConnection.getDefaultConfig();
