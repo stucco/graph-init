@@ -8,6 +8,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,14 +22,11 @@ import org.slf4j.LoggerFactory;
 import com.orientechnologies.orient.core.exception.OCommandExecutionException;
 import com.tinkerpop.blueprints.impls.orient.OrientDynaElementIterable;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
-import com.tinkerpop.rexster.client.RexProException;
-import com.tinkerpop.rexster.client.RexsterClient;
 
 
 /**
- * Parses the Stucco index specification, in order to issue Gremlin requests for
- * setting up indexes. The index specification format is assumed to be the 
- * following JSON:
+ * Parses the Stucco index specification, in order to set up indexes. The index 
+ * specification format is assumed to be the following JSON:
  * 
  * <pre><block>
  * 
@@ -38,7 +37,6 @@ import com.tinkerpop.rexster.client.RexsterClient;
  *       {
  *         "name": propertyName
  *         "class": ("String"|"Character"|"Boolean"|"Byte"|"Short"|"Integer"|"Long"|"Float"|"Double"|"Decimal"|"Precision"|"Geoshape")
- *         "cardinality": ("SINGLE"|"LIST"|"SET")
  *       }
  *       ...
  *     ]
@@ -48,8 +46,8 @@ import com.tinkerpop.rexster.client.RexsterClient;
  *         
  * </block></pre>
  */
-public class IndexDefinitionsToGremlin {
-    private static final Logger logger = LoggerFactory.getLogger(IndexDefinitionsToGremlin.class);
+public class IndexDefinitionsToOrientDB {
+    private static final Logger logger = LoggerFactory.getLogger(IndexDefinitionsToOrientDB.class);
 
     // Keys within the index specification JSON
     private static final String INDEXES = "indexes";
@@ -57,16 +55,10 @@ public class IndexDefinitionsToGremlin {
     private static final String KEYS = "keys";
     private static final String NAME = "name";
     private static final String CLASS = "class";
-    private static final String CARDINALITY = "cardinality";
     
     // Other String constants
     private static final String STRING = "String";
-    private static final String NOTUNIQUE = "NOTUNIQUE";
-    private static final String FULLTEXT = "FULLTEXT";
 
-    /** Number of seconds to pause after initiating connection. */
-    private static final int WAIT_TIME = 1;
-    
     /** Our gateway to the DB. */
     private DBConnection dbConnection;
     
@@ -80,7 +72,7 @@ public class IndexDefinitionsToGremlin {
     private int indexNumber = 0;
 
     
-    private IndexDefinitionsToGremlin() {
+    private IndexDefinitionsToOrientDB() {
         // Instantiable but only from this file    
     }
     
@@ -112,8 +104,6 @@ public class IndexDefinitionsToGremlin {
             JSONObject indexSpec = indexes.getJSONObject(i);
             parseIndexSpec(indexSpec);
         }
-        
-        closeRexsterConnection();
     }
 
     /**
@@ -134,12 +124,12 @@ public class IndexDefinitionsToGremlin {
     }
 
     /**
-     * Builds Gremlin declaration for the properties used in an index.
+     * Builds OrientDB declaration for the properties used in an index.
      * 
      * @param keys           The keys in JSON form
      * @param propertyNames  (OUT) The names of the keys, returned by side effect
      * 
-     * @return Gremlin declaration of properties
+     * @return OrientDB declaration of properties
      */
     private String buildPropertyDeclarations(JSONArray keys, List<String> propertyNames) {
         StringBuilder declarations = new StringBuilder();
@@ -159,19 +149,32 @@ public class IndexDefinitionsToGremlin {
                 classType = STRING;
             }
             
-            // Get the cardinality, defaulting to SINGLE
-            String cardinality = keySpec.optString(CARDINALITY);
-            if (cardinality == null) {
-                cardinality = "";
+            try {
+                // Make the property declaration for the key
+                String declaration = buildPropertyDeclaration(property, classType);
+                this.dbConnection.<OrientDynaElementIterable>executeSQL(declaration);
+                declarations.append(declaration);
+            } catch (OCommandExecutionException e) {
+                // Intercept error to print debug info
+                String stackTrace = getStackTrace(e);
+                logger.error(String.format("Failed to generate property '%s'", property));
+                logger.error(stackTrace);
+                
+                // Re-throw up the stack
+                throw e;
             }
-
-            // Make the property declaration for the key
-            String declaration = buildPropertyDeclaration(property, classType, cardinality);
-            this.dbConnection.<OrientDynaElementIterable>executeSQL(declaration);
-            declarations.append(declaration);
         }
         
         return declarations.toString();
+    }
+    
+    /** Converts a Throwable to a String. */
+    private String getStackTrace(Throwable t) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        t.printStackTrace(pw);
+        String str = sw.toString(); 
+        return str;    
     }
     
     /** 
@@ -179,13 +182,11 @@ public class IndexDefinitionsToGremlin {
      * 
      * @param propertyName  Name of property
      * @param classType     Class type of property
-     * @param cardinality   Cardinality of property ("" means don't declare) 
      */
-    private String buildPropertyDeclaration(String propertyName, String classType, String cardinality) {
+    private String buildPropertyDeclaration(String propertyName, String classType) {
         // Normalize to forms needed in request
         propertyName = propertyName.trim();
         classType = capitalize(classType.trim());
-        cardinality = cardinality.trim().toUpperCase();
 
         // Build the declaration
         String declaration = String.format("CREATE PROPERTY V.%s %s", propertyName, classType);
@@ -197,27 +198,24 @@ public class IndexDefinitionsToGremlin {
     private void buildIndexDeclaration(String indexType, List<String> propertyKeys) {
         
         for(String key : propertyKeys) {
-            // Make up a name
-            String indexName = generateIndexName();        
-            String declaration = String.format("CREATE INDEX %s ON V (%s) %s", indexName, key, indexType);
-            this.dbConnection.<Integer>executeSQL(declaration);
+            try {
+                // Make up a name
+                String indexName = generateIndexName();        
+                String declaration = String.format("CREATE INDEX %s ON V (%s) %s", indexName, key, indexType);
+                this.dbConnection.<Integer>executeSQL(declaration);
+            } catch (OCommandExecutionException e) {
+                // Intercept error so we can report it
+                String stackTrace = getStackTrace(e);
+                logger.error(String.format("Failed to create index for '%s'", key));
+                logger.error(stackTrace); 
+                
+                // Re-throw up the stack
+                throw e;
+            }
         }
         
     }
     
-    /** 
-     * Builds the partial Gremlin declaration for adding property keys to an
-     * index.
-     */
-    private String buildAddKeysDeclaration(List<String> propertyKeys) {
-        StringBuilder declaration = new StringBuilder();
-        for (String key : propertyKeys) {
-            declaration.append(String.format(".addKey(m.getPropertyKey('%s'))", key));
-        }
-        
-        return declaration.toString();
-    }
-
     /** Auto-generates an index name. */
     private String generateIndexName() {
         return "index" + indexNumber++;
@@ -251,27 +249,6 @@ public class IndexDefinitionsToGremlin {
         return c;
     }
 
-    private void closeRexsterConnection() {
-        OrientGraph client = dbConnection.getGraph();
-        DBConnection.closeGraph(client);        
-    }
-
-    /** Sends a request to DB. */
-    private void executeRexsterRequest(String request) {
-        logger.info("Making DB request: " + request);
-        for (int attempt = 1; attempt <= 3; attempt++) {
-            try {
-                dbConnection.executeSQL(request);
-                logger.info("    DB request succeeded");
-                return;
-            } 
-            catch (OCommandExecutionException e) {
-                logger.error("    DB request failed: " + e); 
-            }
-        }
-        logger.error("    Skipping DB request after 3 failed attempts.");
-    }
-    
     /** Gets a text file's content as a String. */
     private String getTextFileContent(File textFile) throws IOException {
         try (BufferedReader in = new BufferedReader(new FileReader(textFile))) {
@@ -296,7 +273,7 @@ public class IndexDefinitionsToGremlin {
             parser.parse(args);
             boolean useTestConfig = parser.found("-test");
             
-            IndexDefinitionsToGremlin loader = new IndexDefinitionsToGremlin();
+            IndexDefinitionsToOrientDB loader = new IndexDefinitionsToOrientDB();
             if (useTestConfig) {
                 loader.setTestMode(true);
             }
@@ -318,6 +295,10 @@ public class IndexDefinitionsToGremlin {
         } 
         catch (IOException e) {
             System.err.printf("Error in opening file, path or file does not exist: %s\n", e.toString());
+            System.exit(-1);
+        }
+        catch (OCommandExecutionException e) {
+            System.err.printf("Indexing failed");
             System.exit(-1);
         }
         catch (UsageException e) {
