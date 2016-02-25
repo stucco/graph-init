@@ -16,7 +16,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
+			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -66,9 +66,9 @@
 			<version>1.14</version>
 		</dependency>
 		<dependency>
-	      <groupId>gov.ornl.stucco</groupId>
-	      <artifactId>DBClient</artifactId>
-	      <version>2.0.1</version>
+	      <groupId>gov.pnnl.stucco</groupId>
+	      <artifactId>DBConnect</artifactId>
+	      <version>0.5.0</version>
     	</dependency>
 	</dependencies>
 	<build>
@@ -90,7 +90,7 @@
 					<execution>
 						<id>build-first</id>
 						<configuration>
-							<mainClass>gov.pnnl.stucco.schema.SchemaToGremlin</mainClass>
+							<mainClass>gov.pnnl.stucco.schema.IndexDefinitionsToDB</mainClass>
 							<attachToBuild>true</attachToBuild>
 							<classifier>onejar</classifier>
 							<filename>populate_schema.jar</filename>

@@ -9,7 +9,7 @@
 		<maven.test.skip>true</maven.test.skip>
   </properties>
   <modules>
-    <module>rexster-client-java</module>
+    <module>graph-db-connection</module>
   </modules>
   <build>
     <plugins>
