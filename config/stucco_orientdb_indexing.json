@@ -49,51 +49,6 @@
       "type": "NOTUNIQUE",
       "keys": [
         {
-          "name": "phaseDate",
-          "class": "Long"
-        }
-      ]    
-    },
-    {
-      "type": "NOTUNIQUE",
-      "keys": [
-        {
-          "name": "modifiedDate",
-          "class": "Long"
-        }
-      ]    
-    },
-    {
-      "type": "NOTUNIQUE",
-      "keys": [
-        {
-          "name": "publishedDate",
-          "class": "Long"
-        }
-      ]    
-    },
-    {
-      "type": "NOTUNIQUE",
-      "keys": [
-        {
-          "name": "discoveryDate",
-          "class": "Long"
-        }
-      ]    
-    },
-    {
-      "type": "NOTUNIQUE",
-      "keys": [
-        {
-          "name": "signatureDate",
-          "class": "Long"
-        }
-      ]    
-    },
-    {
-      "type": "NOTUNIQUE",
-      "keys": [
-        {
           "name": "startTime",
           "class": "Long"
         }
