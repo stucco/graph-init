@@ -3,6 +3,8 @@ jdk:
   - oraclejdk7
   - openjdk7
   - oraclejdk8
+env:
+  - STUCCO_DB_TYPE=INMEMORY STUCCO_DB_CONFIG="config/inmemory.yml" STUCCO_DB_INDEX_CONFIG="config/inmemory.yml"
 before_install:
   - mvn --non-recursive scm:checkout -graph-db-connection
   - cd graph-db-connection
