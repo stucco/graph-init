@@ -20,8 +20,6 @@
         <configuration>
           <connectionUrl>scm:git:https://github.com/stucco/${module.name}.git</connectionUrl>
           <checkoutDirectory>${module.name}</checkoutDirectory>
-          <scmVersionType>branch</scmVersionType>
-          <scmVersion>${branch.name}</scmVersion>
         </configuration>
       </plugin>
       <plugin>
